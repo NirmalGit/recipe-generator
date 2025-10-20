@@ -7,7 +7,8 @@ export default defineConfig(({ mode }) => {
   const isProd = mode === "production";
 
   return {
-    base: isProd ? "/receipe-generate/" : "/",
+    // IMPORTANT: repo name here must match GitHub repository name exactly
+    base: isProd ? "/recipe-generator/" : "/",
     server: {
       port: 3000,
       host: "0.0.0.0",
