@@ -36,17 +36,16 @@ const recipeSchema = {
 };
 
 
-export const generateRecipe = async (ingredients: string[]): Promise<Recipe> => {
+export const generateRecipe = async (ingredients: string[], language: 'en' | 'hi'): Promise<Recipe> => {
   if (ingredients.length === 0) {
     throw new Error("Please provide at least one ingredient.");
   }
-  
-  const prompt = `You are a creative chef. Generate a delicious recipe using ONLY the following ingredients: ${ingredients.join(", ")}. If some common pantry staples are needed (like salt, pepper, oil, water, flour), you can assume they are available. The tone should be enthusiastic and encouraging.
-
-  Based on the ingredients provided, create a complete recipe.
-  
-  Available ingredients: ${ingredients.join(", ")}`;
-
+  let prompt = `You are a creative chef. Generate a delicious recipe using ONLY the following ingredients: ${ingredients.join(", ")}. If some common pantry staples are needed (like salt, pepper, oil, water, flour), you can assume they are available. The tone should be enthusiastic and encouraging.\n\nBased on the ingredients provided, create a complete recipe.\n\nAvailable ingredients: ${ingredients.join(", ")}`;
+  if (language === 'hi') {
+    prompt += '\n\nRespond in Hindi.';
+  } else {
+    prompt += '\n\nRespond in English.';
+  }
   try {
     const response = await ai.models.generateContent({
       model: "gemini-2.5-flash",
@@ -56,12 +55,10 @@ export const generateRecipe = async (ingredients: string[]): Promise<Recipe> => 
         responseSchema: recipeSchema,
       },
     });
-
     const text = response.text.trim();
     const sanitizedText = text.replace(/^```json\s*|```\s*$/g, '');
     const recipeData: Recipe = JSON.parse(sanitizedText);
     return recipeData;
-
   } catch (error) {
     console.error("Error generating recipe:", error);
     throw new Error("Failed to generate a recipe. The model might be busy, or the ingredients might be too unusual. Please try again.");

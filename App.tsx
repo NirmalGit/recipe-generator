@@ -1,5 +1,6 @@
 
 import React, { useState, useCallback } from 'react';
+import { LanguageProvider, useLanguage } from './components/LanguageContext';
 import type { Recipe } from './types';
 import { generateRecipe } from './services/geminiService';
 import IngredientInput from './components/IngredientInput';
@@ -7,7 +8,8 @@ import RecipeDisplay from './components/RecipeDisplay';
 import { ChefHatIcon } from './components/icons/ChefHatIcon';
 import { SparklesIcon } from './components/icons/SparklesIcon';
 
-const App: React.FC = () => {
+const AppContent: React.FC = () => {
+  const { language, setLanguage } = useLanguage();
   const [ingredients, setIngredients] = useState<string[]>(['Tomatoes', 'Onion', 'Garlic']);
   const [recipe, setRecipe] = useState<Recipe | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -22,18 +24,29 @@ const App: React.FC = () => {
     setError(null);
     setRecipe(null);
     try {
-      const generatedRecipe = await generateRecipe(ingredients);
+      const generatedRecipe = await generateRecipe(ingredients, language);
       setRecipe(generatedRecipe);
     } catch (e: any) {
       setError(e.message || "An unknown error occurred.");
     } finally {
       setIsLoading(false);
     }
-  }, [ingredients]);
+  }, [ingredients, language]);
 
   return (
     <div className="min-h-screen bg-orange-50 font-sans text-gray-800">
       <main className="container mx-auto px-4 py-8 md:py-16">
+        <div className="flex justify-end mb-4">
+          <label className="mr-2 font-semibold">Language:</label>
+          <select
+            value={language}
+            onChange={e => setLanguage(e.target.value as 'en' | 'hi')}
+            className="border rounded px-2 py-1"
+          >
+            <option value="en">English</option>
+            <option value="hi">Hindi</option>
+          </select>
+        </div>
         <header className="text-center mb-12">
           <div className="flex justify-center items-center gap-4 mb-4">
             <ChefHatIcon className="w-16 h-16 text-orange-500" />
@@ -47,7 +60,7 @@ const App: React.FC = () => {
         </header>
 
         <div className="max-w-4xl mx-auto bg-white rounded-2xl shadow-lg p-6 md:p-10 border border-orange-100">
-          <IngredientInput ingredients={ingredients} setIngredients={setIngredients} />
+          <IngredientInput ingredients={ingredients} setIngredients={setIngredients} language={language} />
           
           <div className="text-center mt-8">
             <button
@@ -80,7 +93,7 @@ const App: React.FC = () => {
               <p>{error}</p>
             </div>
           )}
-          {recipe && <RecipeDisplay recipe={recipe} />}
+          {recipe && <RecipeDisplay recipe={recipe} language={language} />}
         </div>
       </main>
       <footer className="text-center py-6 text-gray-500">
@@ -89,5 +102,11 @@ const App: React.FC = () => {
     </div>
   );
 };
+
+const App: React.FC = () => (
+  <LanguageProvider>
+    <AppContent />
+  </LanguageProvider>
+);
 
 export default App;
